@@ -1,0 +1,14 @@
+Package: markSPPA
+Type: Package
+Title: marked Spatial Point Pattern Analysis
+Version: 0.1.2
+Author: Tianzhong Jing 
+Maintainer: Tianzhong Jing <jingtianzhong@163.com>
+Description: Mark-correlation functions for data with one qualitative and one quantitative mark,and bivariate pattern with one quantitative mark, including Moran’s I type summary statistic and Schlather test function; trivariate Random Labeling; bivariate difference K function and bivariate difference g function, etc.
+    This package was developed based on the package spatstat.
+License: GPL (>=2)
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.3
+Depends:R (>= 4.3.0), spatstat.explore, spatstat.geom, spatstat.random,
+Imports:  stats

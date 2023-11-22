@@ -1,0 +1,144 @@
+#'
+#' @title \verb{Kcross} difference estimation, tidy data
+#'
+#' @description
+#' Estimates difference between two cross-type \emph{K} functions (\verb{Kcross}).
+#'
+#' @usage
+#' K_Kcross(ppp.marks,yes="Yes",no="No",t.type="yn-nn",...,
+#'     r=NULL, breaks=NULL, correction,
+#'     ratio=FALSE)
+#'
+#' @param ppp.marks A "\verb{ppp}" object with a dichotomous mark (for example, "Yes" and "No").
+#' @param yes The value of successful category in the dichotomous mark,
+#' for example, "Yes". If \verb{missing}, the second level of the mark will be assigned.
+#' @param no The value of failure category in the dichotomous mark,
+#' for example, "No". If \verb{missing}, the first level of the mark will be assigned.
+#' @param t.type Character, indicating what type of test to be estimated. The value can be "yn-nn", "ny-nn", "yy-nn", and "ny-yn",see \verb{Details}
+#' @param ... Same as in \verb{Kcross()} from the package \verb{spatstat}
+#' @param r Same as in \verb{Kcross()} from the package \verb{spatstat}
+#' @param breaks Same as in \verb{Kcross()} from the package \verb{spatstat}
+#' @param correction Same as in \verb{Kcross()} from the package \verb{spatstat}
+#' @param ratio Same as in \verb{Kcross()} from the package \verb{spatstat}
+#'
+#' @details
+#' Bivariate difference \emph{K} functions is estimated as (Raventós, et al., 2010).
+#'
+#' if t.type=="yn-nn", \deqn{K_{m,l}(r)-K_{l,l}(r)}
+#' if t.type=="ny-nn", \deqn{K_{l,m}(r)-K_{l,l}(r)}
+#' if t.type=="yy-nn", \deqn{K_{m,m}(r)-K_{l,l}(r)}
+#' if t.type=="ny-yn", \deqn{K_{l,l}(r)-K_{m,l}(r)}
+#' where \eqn{K()} is the Ripley \emph{K} function, \emph{l} and \emph{m} are
+#' two levels of a binary mark.
+#'
+#' Note that there is a symmetry in \emph{i} and \emph{j}, so that \eqn{K_{ij}(r) = K_{ji}(r)},
+#' However, estimates of these functions may not be exactly symmetric in i and j,
+#' because of the effect of edge corrections.
+#'
+#' This function tests, for example, the host density-dependent infection of a
+#' forest disease.
+#'
+#' Performs the same job as \code{\link{K_Kcross2}}, but used for tidy data,
+#' i.e, with only one mark.
+#'
+#' Use the function \verb{rlabel()} from the package \verb{spatstat} to permute
+#' the binary mark for envelope simulation.
+#'
+#' @return A object of "\verb{fv}".
+#' @importFrom spatstat.geom is.multitype marks npoints superimpose intensity is.ppp is.marked
+#' @importFrom spatstat.explore pcfcross pcfdot Kcross Kdot eval.fv
+#' @export
+#' @references
+#' Wiegand, T. and Moloney, K. A. 2013. Handbook of spatial point-pattern
+#' analysis in ecology. Chapman and Hall/CRC, Boca Raton.
+#'
+#' Wiegand, T. 2018. User Manual for the Programita software.
+#'
+#' Raventós, J., Wiegand, T., and de Luis, M. 2010. Evidence for the spatial
+#' segregation hypothesis: a test with nine-year survivorship data in a
+#' Mediterranean shrubland. Ecology. 91 7:2110-2120.
+#'
+#' Baddeley A.,Rubak E.,Turner R. (2016). Spatial Point Patterns: Methodology and Applications with R.
+#' Boca Raton, FL: CRC Press.
+#'
+#' @seealso \code{\link{K_Kcross2}} which does the same job,
+#' \code{\link{g_gcross}}, \code{\link{L_Lcross}}, \code{\link{J_Jcross}},\code{\link{ND_NDcross}},
+#' \code{\link{triKcross}}, \code{\link{triK_K}}.
+#'
+#' @author Tianzhong Jing \email{Jingtianzhong@163.com}
+#'
+#' @examples
+#' \dontrun{
+#' plot(K_Kcross(ppp.ash.c3,t.type="ny-nn"))
+#' plot(K_Kcross(ppp.ash.c3,t.type="ny-nn",correction="Ripley"))
+#' nsim=2499
+#' ev.k_kcross.ash.c3<-envelope(ppp.ash.c3,K_Kcross,nsim=nsim,
+#'     funargs=list(yes="Yes",no="No"),simulate=rlabel)
+#' plot(ev.k_kcross.ash.c3)
+#' }
+#'
+
+K_Kcross<-function(ppp.marks,yes="Yes",no="No",t.type="yn-nn",...,
+                   r=NULL, breaks=NULL, correction,
+                   ratio=FALSE){
+
+  stopifnot(is.multitype(ppp.marks))
+  if(missing(yes)) yes<-levels(marks(ppp.marks))[2]
+  if(missing(no)) no<-levels(marks(ppp.marks))[1]
+  stopifnot(all(c(yes, no ) %in% levels(marks(ppp.marks))))
+  stopifnot(yes!=no)
+
+  switch(t.type,"yn-nn"={
+    k.yn<-Kcross(ppp.marks,yes,no,...,
+                 r=r, breaks=breaks, correction=correction,
+                 ratio=ratio)
+    k.nn<-Kcross(ppp.marks,no,no,...,
+                 r=r, breaks=breaks, correction=correction,
+                 ratio=ratio)
+    k_k<-eval.fv(k.yn-k.nn)
+    attr(k_k,"fname")<-c("K", paste("list(",yes,"-", no,",", no,")"))
+
+  },"ny-nn"={
+    k.ny<-Kcross(ppp.marks,no,yes,...,
+                 r=r, breaks=breaks, correction=correction,
+                 ratio=ratio)
+    k.nn<-Kcross(ppp.marks,no,no,...,
+                 r=r, breaks=breaks, correction=correction,
+                 ratio=ratio)
+    k_k<-eval.fv(k.ny-k.nn)
+    attr(k_k,"fname")<-c("K", paste("list(",no,",", yes,"-", no,")"))
+
+  }, "yy-nn"={
+    k.yy<-Kcross(ppp.marks,yes,yes,...,
+                 r=r, breaks=breaks, correction=correction,
+                 ratio=ratio)
+    k.nn<-Kcross(ppp.marks,no,no,...,
+                 r=r, breaks=breaks, correction=correction,
+                 ratio=ratio)
+    k_k<-eval.fv(k.yy-k.nn)
+    attr(k_k,"fname")<-c("K", paste("list(",yes,"-", yes,",", no,"-", no,")"))
+
+  },"ny-yn"={
+    k.ny<-Kcross(ppp.marks,no,yes,...,
+                 r=r, breaks=breaks, correction=correction,
+                 ratio=ratio)
+    k.yn<-Kcross(ppp.marks,yes,no,...,
+                 r=r, breaks=breaks, correction=correction,
+                 ratio=ratio)
+    k_k<-eval.fv(k.ny-k.yn)
+    attr(k_k,"fname")<-c("K", paste("list(",no,"-", yes,",", yes,"-", no,")"))
+
+  },stop("Unsupported test type!")
+  )
+
+  labl.name<-names(k_k)
+  labls<-vector(length=length(labl.name))
+  labls[1]<-"r"
+  labls[2]<-"{%s[%s]^{Pois}}(r)"
+  for(i in 3:length(labl.name)){
+    labls[i]<-paste0("{hat(%s)[%s]^{",labl.name[i],"}}(r)")
+  }
+  attr(k_k,"labl")<-labls
+
+ return(k_k)
+}

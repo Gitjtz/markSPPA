@@ -1,0 +1,16 @@
+citHeader("To cite the markSPPA package in publications use:")
+citEntry(entry="Manual",
+         title ="markSPPA: marked Spatial Point Pattern Analysis",
+         author = "Tianzhong Jing",
+         Organization = " Northeast Forestry University",
+         address      = " Harbin, China",
+         year         = 2023,
+         note         = "R package version 0.1.2",
+         url          = "https://github.com/Gitjtz/markSPPA",
+         textVersion =
+         paste("Jing, T. (2023) ",
+               "markSPPA: marked Spatial Point Pattern Analysis, ",
+               "Northeast Forestry University, Harbin, China, ",
+                "https://github.com/Gitjtz/markSPPA",
+                " Version = 0.1.2",".",sep="") )
+
